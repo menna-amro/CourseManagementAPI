@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CourseManagementAPI.DTOs.Instructor;
+using CourseManagementAPI.DTOs;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -20,10 +20,13 @@ namespace CourseManagementAPI.Controllers
         public async Task<ActionResult<IEnumerable<InstructorDto>>> GetInstructors()
         {
             var instructors = await _context.Instructors
+                .Include(i => i.Profile)
+                .AsNoTracking()
                 .Select(i => new InstructorDto
                 {
                     Id = i.Id,
-                    Name = i.Name
+                    Name = i.Name,
+                    Email = i.Profile != null ? i.Profile.Email : null
                 })
                 .ToListAsync();
 
@@ -35,11 +38,14 @@ namespace CourseManagementAPI.Controllers
         public async Task<ActionResult<InstructorDto>> GetInstructor(int id)
         {
             var instructor = await _context.Instructors
+                .Include(i => i.Profile)
+                .AsNoTracking()
                 .Where(i => i.Id == id)
                 .Select(i => new InstructorDto
                 {
                     Id = i.Id,
-                    Name = i.Name
+                    Name = i.Name,
+                    Email = i.Profile != null ? i.Profile.Email : null
                 })
                 .FirstOrDefaultAsync();
 
@@ -51,23 +57,24 @@ namespace CourseManagementAPI.Controllers
 
         // POST: api/instructors
         [HttpPost]
-        public async Task<ActionResult<InstructorDto>> CreateInstructor(CreateInstructorDto dto)
+        public async Task<IActionResult> CreateInstructor(CreateInstructorDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var instructor = new Instructor
             {
-                Name = dto.Name
+                Name = dto.Name,
+                Profile = new InstructorProfile
+                {
+                    Email = dto.Email
+                }
             };
 
             _context.Instructors.Add(instructor);
             await _context.SaveChangesAsync();
 
-            var result = new InstructorDto
-            {
-                Id = instructor.Id,
-                Name = instructor.Name
-            };
-
-            return CreatedAtAction(nameof(GetInstructor), new { id = instructor.Id }, result);
+            return Ok(new { message = "Instructor created successfully" });
         }
 
         // PUT: api/instructors/5
@@ -75,14 +82,29 @@ namespace CourseManagementAPI.Controllers
         public async Task<IActionResult> UpdateInstructor(int id, UpdateInstructorDto dto)
         {
             if (id != dto.Id)
-                return BadRequest();
+                return BadRequest("ID mismatch");
 
-            var instructor = await _context.Instructors.FindAsync(id);
+            var instructor = await _context.Instructors
+                .Include(i => i.Profile)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (instructor == null)
                 return NotFound();
 
             instructor.Name = dto.Name;
+
+            if (instructor.Profile != null)
+            {
+                instructor.Profile.Email = dto.Email;
+            }
+            else
+            {
+                instructor.Profile = new InstructorProfile
+                {
+                    Email = dto.Email,
+                    InstructorId = instructor.Id
+                };
+            }
 
             await _context.SaveChangesAsync();
 

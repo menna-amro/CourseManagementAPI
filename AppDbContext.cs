@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
+
 namespace CourseManagementAPI
 {
     public class AppDbContext : DbContext
@@ -19,32 +20,35 @@ namespace CourseManagementAPI
         {
             base.OnModelCreating(modelBuilder);
 
-            // Composite Primary Key for Enrollment
+            // Composite Primary Key (Many-to-Many via Enrollment)
             modelBuilder.Entity<Enrollment>()
                 .HasKey(e => new { e.StudentId, e.CourseId });
 
-            // One-to-One (Instructor - Profile)
+            // One-to-One: Instructor ↔ InstructorProfile
             modelBuilder.Entity<Instructor>()
                 .HasOne(i => i.Profile)
                 .WithOne(p => p.Instructor)
                 .HasForeignKey<InstructorProfile>(p => p.InstructorId);
 
-            // One-to-Many (Instructor - Courses) ✅ FIXED
+            // One-to-Many: Instructor → Courses
             modelBuilder.Entity<Instructor>()
                 .HasMany(i => i.Courses)
                 .WithOne(c => c.Instructor)
-                .HasForeignKey(c => c.InstructorId);
+                .HasForeignKey(c => c.InstructorId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Many-to-Many (Student - Course via Enrollment)
+            // Many-to-Many: Student ↔ Course (via Enrollment)
             modelBuilder.Entity<Enrollment>()
                 .HasOne(e => e.Student)
                 .WithMany(s => s.Enrollments)
-                .HasForeignKey(e => e.StudentId);
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Enrollment>()
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)
-                .HasForeignKey(e => e.CourseId);
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
