@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CourseManagementAPI.DTOs;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -19,6 +20,7 @@ namespace CourseManagementAPI.Controllers
         public async Task<ActionResult<IEnumerable<StudentDto>>> GetStudents()
         {
             var students = await _context.Students
+                .AsNoTracking()
                 .Select(s => new StudentDto
                 {
                     Id = s.Id,
@@ -35,6 +37,7 @@ namespace CourseManagementAPI.Controllers
         public async Task<ActionResult<StudentDto>> GetStudent(int id)
         {
             var student = await _context.Students
+                .AsNoTracking()
                 .Where(s => s.Id == id)
                 .Select(s => new StudentDto
                 {
@@ -54,6 +57,15 @@ namespace CourseManagementAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<StudentDto>> CreateStudent(CreateStudentDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var exists = await _context.Students
+                .AnyAsync(s => s.Email == dto.Email);
+
+            if (exists)
+                return BadRequest("Email already exists");
+
             var student = new Student
             {
                 Name = dto.Name,
@@ -77,8 +89,11 @@ namespace CourseManagementAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStudent(int id, UpdateStudentDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if (id != dto.Id)
-                return BadRequest();
+                return BadRequest("ID mismatch");
 
             var student = await _context.Students.FindAsync(id);
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CourseManagementAPI.DTOs.Instructor;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -16,54 +17,79 @@ namespace CourseManagementAPI.Controllers
 
         // GET: api/instructors
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Instructor>>> GetInstructors()
+        public async Task<ActionResult<IEnumerable<InstructorDto>>> GetInstructors()
         {
-            return await _context.Instructors
-                .Include(i => i.Profile)
-                .Include(i => i.Courses)
+            var instructors = await _context.Instructors
+                .Select(i => new InstructorDto
+                {
+                    Id = i.Id,
+                    Name = i.Name
+                })
                 .ToListAsync();
+
+            return Ok(instructors);
         }
 
-        // GET: api/instructors/1
+        // GET: api/instructors/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Instructor>> GetInstructor(int id)
+        public async Task<ActionResult<InstructorDto>> GetInstructor(int id)
         {
             var instructor = await _context.Instructors
-                .Include(i => i.Profile)
-                .Include(i => i.Courses)
-                .FirstOrDefaultAsync(i => i.Id == id);
+                .Where(i => i.Id == id)
+                .Select(i => new InstructorDto
+                {
+                    Id = i.Id,
+                    Name = i.Name
+                })
+                .FirstOrDefaultAsync();
 
             if (instructor == null)
                 return NotFound();
 
-            return instructor;
+            return Ok(instructor);
         }
 
         // POST: api/instructors
         [HttpPost]
-        public async Task<ActionResult<Instructor>> CreateInstructor(Instructor instructor)
+        public async Task<ActionResult<InstructorDto>> CreateInstructor(CreateInstructorDto dto)
         {
+            var instructor = new Instructor
+            {
+                Name = dto.Name
+            };
+
             _context.Instructors.Add(instructor);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetInstructor), new { id = instructor.Id }, instructor);
+            var result = new InstructorDto
+            {
+                Id = instructor.Id,
+                Name = instructor.Name
+            };
+
+            return CreatedAtAction(nameof(GetInstructor), new { id = instructor.Id }, result);
         }
 
-        // PUT: api/instructors/1
+        // PUT: api/instructors/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateInstructor(int id, Instructor instructor)
+        public async Task<IActionResult> UpdateInstructor(int id, UpdateInstructorDto dto)
         {
-            if (id != instructor.Id)
+            if (id != dto.Id)
                 return BadRequest();
 
-            _context.Entry(instructor).State = EntityState.Modified;
+            var instructor = await _context.Instructors.FindAsync(id);
+
+            if (instructor == null)
+                return NotFound();
+
+            instructor.Name = dto.Name;
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/instructors/1
+        // DELETE: api/instructors/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInstructor(int id)
         {

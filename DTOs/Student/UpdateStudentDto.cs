@@ -1,15 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 
-public class UpdateStudentDto
+namespace CourseManagementAPI.DTOs
 {
-    [Required]
-    public int Id { get; set; }
+    public class UpdateStudentDto
+    {
+        [Required]
+        public int Id { get; set; }
 
-    [Required]
-    [MaxLength(100)]
-    public required string Name { get; set; }
+        [Required]
+        [MaxLength(100)]
+        public required string Name { get; set; }
 
-    [Required]
-    [EmailAddress]
-    public required string Email { get; set; }
+        [Required]
+        [EmailAddress]
+        public required string Email { get; set; }
+    }
 }

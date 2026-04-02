@@ -1,8 +1,11 @@
-public class StudentDto
+namespace CourseManagementAPI.DTOs
 {
-    public int Id { get; set; }
+    public class StudentDto
+    {
+        public int Id { get; set; }
 
-    public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-    public required string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
+    }
 }
