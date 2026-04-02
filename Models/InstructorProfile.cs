@@ -6,5 +6,5 @@ public class InstructorProfile
 
     public int InstructorId { get; set; }
 
-    public Instructor Instructor { get; set; } = null!;
+    public Instructor? Instructor { get; set; }
 }

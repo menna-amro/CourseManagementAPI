@@ -4,7 +4,7 @@ public class Instructor
 
     public string Name { get; set; } = string.Empty;
 
-    public InstructorProfile Profile { get; set; } = null!;
+    public InstructorProfile? Profile { get; set; }
 
     public ICollection<Course> Courses { get; set; } = new List<Course>();
 }
