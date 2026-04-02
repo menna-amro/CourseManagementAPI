@@ -423,7 +423,7 @@ POST /api/Enrollment
 ## Retrieve Courses After Authentication
 ![Get Courses](screenshots/get-courses.jpeg)
 
-## Role-Based Authorization Restricting Student Access
+## Successful Student Login and JWT Token Generation
 ![Student Login](screenshots/student-login.jpeg)
 
 
