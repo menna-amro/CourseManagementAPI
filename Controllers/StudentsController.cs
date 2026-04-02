@@ -1,51 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI.DTOs;
+using CourseManagementAPI.Services.Interfaces;
 
 namespace CourseManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class StudentsController : ControllerBase
+    public class StudentController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IStudentService _studentService;
 
-        public StudentsController(AppDbContext context)
+        public StudentController(IStudentService studentService)
         {
-            _context = context;
+            _studentService = studentService;
         }
 
-        // GET: api/students
+        // GET: api/student
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StudentDto>>> GetStudents()
+        public async Task<IActionResult> GetAll()
         {
-            var students = await _context.Students
-                .AsNoTracking()
-                .Select(s => new StudentDto
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Email = s.Email
-                })
-                .ToListAsync();
-
+            var students = await _studentService.GetAllAsync();
             return Ok(students);
         }
 
-        // GET: api/students/5
+        // GET: api/student/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<StudentDto>> GetStudent(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var student = await _context.Students
-                .AsNoTracking()
-                .Where(s => s.Id == id)
-                .Select(s => new StudentDto
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Email = s.Email
-                })
-                .FirstOrDefaultAsync();
+            var student = await _studentService.GetByIdAsync(id);
 
             if (student == null)
                 return NotFound();
@@ -53,74 +35,42 @@ namespace CourseManagementAPI.Controllers
             return Ok(student);
         }
 
-        // POST: api/students
+        // POST: api/student
         [HttpPost]
-        public async Task<ActionResult<StudentDto>> CreateStudent(CreateStudentDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateStudentDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var exists = await _context.Students
-                .AnyAsync(s => s.Email == dto.Email);
-
-            if (exists)
-                return BadRequest("Email already exists");
-
-            var student = new Student
-            {
-                Name = dto.Name,
-                Email = dto.Email
-            };
-
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
-
-            var result = new StudentDto
-            {
-                Id = student.Id,
-                Name = student.Name,
-                Email = student.Email
-            };
-
-            return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, result);
+            await _studentService.CreateAsync(dto);
+            return Ok("Student created successfully");
         }
 
-        // PUT: api/students/5
+        // PUT: api/student/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(int id, UpdateStudentDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (id != dto.Id)
-                return BadRequest("ID mismatch");
-
-            var student = await _context.Students.FindAsync(id);
-
-            if (student == null)
+            var existingStudent = await _studentService.GetByIdAsync(id);
+            if (existingStudent == null)
                 return NotFound();
 
-            student.Name = dto.Name;
-            student.Email = dto.Email;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            await _studentService.UpdateAsync(id, dto);
+            return Ok("Student updated successfully");
         }
 
-        // DELETE: api/students/5
+        // DELETE: api/student/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var student = await _context.Students.FindAsync(id);
-
-            if (student == null)
+            var existingStudent = await _studentService.GetByIdAsync(id);
+            if (existingStudent == null)
                 return NotFound();
 
-            _context.Students.Remove(student);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            await _studentService.DeleteAsync(id);
+            return Ok("Student deleted successfully");
         }
     }
 }

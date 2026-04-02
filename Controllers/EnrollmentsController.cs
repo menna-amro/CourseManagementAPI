@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI.DTOs;
+using CourseManagementAPI.Services.Interfaces;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -8,111 +8,53 @@ namespace CourseManagementAPI.Controllers
     [Route("api/[controller]")]
     public class EnrollmentsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IEnrollmentService _enrollmentService;
 
-        public EnrollmentsController(AppDbContext context)
+        public EnrollmentsController(IEnrollmentService enrollmentService)
         {
-            _context = context;
+            _enrollmentService = enrollmentService;
         }
 
-        // =========================
-        // POST: Enroll Student
-        // =========================
+        // POST: api/enrollments
         [HttpPost]
-        public async Task<IActionResult> EnrollStudent([FromBody] CreateEnrollmentDto dto)
+        public async Task<IActionResult> Enroll(CreateEnrollmentDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Check student exists
-            var studentExists = await _context.Students
-                .AnyAsync(s => s.Id == dto.StudentId);
-
-            if (!studentExists)
-                return NotFound("Student not found");
-
-            // Check course exists
-            var courseExists = await _context.Courses
-                .AnyAsync(c => c.Id == dto.CourseId);
-
-            if (!courseExists)
-                return NotFound("Course not found");
-
-            // Prevent duplicate enrollment
-            var exists = await _context.Enrollments
-                .AnyAsync(e => e.StudentId == dto.StudentId && e.CourseId == dto.CourseId);
-
-            if (exists)
-                return BadRequest("Student already enrolled in this course");
-
-            var enrollment = new Enrollment
+            try
             {
-                StudentId = dto.StudentId,
-                CourseId = dto.CourseId
-            };
-
-            _context.Enrollments.Add(enrollment);
-            await _context.SaveChangesAsync();
-
-            return Ok("Student enrolled successfully");
+                await _enrollmentService.EnrollAsync(dto);
+                return Ok("Student enrolled successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // =========================
-        // GET: Courses of a Student
-        // =========================
+        // GET: api/enrollments/student/5
         [HttpGet("student/{studentId}")]
         public async Task<IActionResult> GetStudentCourses(int studentId)
         {
-            var courses = await _context.Enrollments
-                .AsNoTracking()
-                .Where(e => e.StudentId == studentId)
-                .Select(e => new
-                {
-                    CourseId = e.Course.Id,
-                    CourseTitle = e.Course.Title,
-                    InstructorName = e.Course.Instructor.Name
-                })
-                .ToListAsync();
-
-            return Ok(courses);
+            var result = await _enrollmentService.GetStudentCoursesAsync(studentId);
+            return Ok(result);
         }
 
-        // =========================
-        // GET: Students in a Course
-        // =========================
+        // GET: api/enrollments/course/3
         [HttpGet("course/{courseId}")]
         public async Task<IActionResult> GetCourseStudents(int courseId)
         {
-            var students = await _context.Enrollments
-                .AsNoTracking()
-                .Where(e => e.CourseId == courseId)
-                .Select(e => new
-                {
-                    StudentId = e.Student.Id,
-                    StudentName = e.Student.Name,
-                    StudentEmail = e.Student.Email
-                })
-                .ToListAsync();
-
-            return Ok(students);
+            var result = await _enrollmentService.GetCourseStudentsAsync(courseId);
+            return Ok(result);
         }
 
-        // =========================
-        // DELETE: Remove Enrollment
-        // =========================
+        // DELETE: api/enrollments?studentId=1&courseId=2
         [HttpDelete]
-        public async Task<IActionResult> RemoveEnrollment(int studentId, int courseId)
+        public async Task<IActionResult> Delete(int studentId, int courseId)
         {
-            var enrollment = await _context.Enrollments
-                .FirstOrDefaultAsync(e => e.StudentId == studentId && e.CourseId == courseId);
-
-            if (enrollment == null)
-                return NotFound("Enrollment not found");
-
-            _context.Enrollments.Remove(enrollment);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            await _enrollmentService.DeleteAsync(studentId, courseId);
+            return Ok("Enrollment removed successfully");
         }
     }
 }

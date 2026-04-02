@@ -1,57 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI.DTOs;
+using CourseManagementAPI.Services.Interfaces;
 
 namespace CourseManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CoursesController : ControllerBase
+    public class CourseController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ICourseService _courseService;
 
-        public CoursesController(AppDbContext context)
+        public CourseController(ICourseService courseService)
         {
-            _context = context;
+            _courseService = courseService;
         }
 
-        // =========================
-        // GET: All Courses
-        // =========================
+        // GET: api/course
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var courses = await _context.Courses
-                .AsNoTracking()
-                .Select(c => new CourseDto
-                {
-                    Id = c.Id,
-                    Title = c.Title,
-                    InstructorId = c.InstructorId,
-                    InstructorName = c.Instructor.Name
-                })
-                .ToListAsync();
-
+            var courses = await _courseService.GetAllAsync();
             return Ok(courses);
         }
 
-        // =========================
-        // GET: Course by Id
-        // =========================
+        // GET: api/course/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var course = await _context.Courses
-                .AsNoTracking()
-                .Where(c => c.Id == id)
-                .Select(c => new CourseDto
-                {
-                    Id = c.Id,
-                    Title = c.Title,
-                    InstructorId = c.InstructorId,
-                    InstructorName = c.Instructor.Name
-                })
-                .FirstOrDefaultAsync();
+            var course = await _courseService.GetByIdAsync(id);
 
             if (course == null)
                 return NotFound();
@@ -59,80 +35,28 @@ namespace CourseManagementAPI.Controllers
             return Ok(course);
         }
 
-        // =========================
-        // POST: Create Course
-        // =========================
+        // POST: api/course
         [HttpPost]
         public async Task<IActionResult> Create(CreateCourseDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            // Check instructor exists
-            var instructorExists = await _context.Instructors
-                .AnyAsync(i => i.Id == dto.InstructorId);
-
-            if (!instructorExists)
-                return NotFound("Instructor not found");
-
-            var course = new Course
-            {
-                Title = dto.Title,
-                InstructorId = dto.InstructorId
-            };
-
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
-
+            await _courseService.CreateAsync(dto);
             return Ok("Course created successfully");
         }
 
-        // =========================
-        // PUT: Update Course
-        // =========================
+        // PUT: api/course/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateCourseDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var course = await _context.Courses
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (course == null)
-                return NotFound();
-
-            // Check instructor exists
-            var instructorExists = await _context.Instructors
-                .AnyAsync(i => i.Id == dto.InstructorId);
-
-            if (!instructorExists)
-                return NotFound("Instructor not found");
-
-            course.Title = dto.Title;
-            course.InstructorId = dto.InstructorId;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            await _courseService.UpdateAsync(id, dto);
+            return Ok("Course updated successfully");
         }
 
-        // =========================
-        // DELETE: Remove Course
-        // =========================
+        // DELETE: api/course/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var course = await _context.Courses
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (course == null)
-                return NotFound();
-
-            _context.Courses.Remove(course);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            await _courseService.DeleteAsync(id);
+            return Ok("Course deleted successfully");
         }
     }
 }
