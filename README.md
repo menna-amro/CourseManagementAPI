@@ -408,6 +408,38 @@ POST /api/Enrollment
 
 # Screenshots
 
+## Successful Login and JWT Token Generation
+![Login Success](screenshots/login-success.png)
+
+## Invalid Login Attempt (Unauthorized Access)
+![Invalid Login](screenshots/login-invalid.png)
+
+## Access Denied Without Authentication Token
+![Unauthorized Access](screenshots/unauthorized-access.png)
+
+## Swagger Authorization Using JWT Token
+![Swagger Authorization](screenshots/swagger-authorize.png)
+
+## Retrieve Courses After Authentication
+![Get Courses](screenshots/get-courses.png)
+
+## Role-Based Authorization Restricting Student Access
+![Student Login](screenshots/student-login.png)
+
+
+## Role-Based Authorization Restricting Student Access
+![Student Forbidden](screenshots/student-forbidden.png)
+
+## Admin Creating Course Successfully
+![Admin Create Course](screenshots/admin-create.png)
+
+## Many-to-Many Relationship Between Students and Courses
+![Student Enrollments](screenshots/enrollement.png)
+
+## Delete Instructor Using Protected Endpoint
+![Delete Instructor](screenshots/delete-instructor.png)
+
+
 
 Swagger screenshots demonstrate:
 
@@ -417,5 +449,3 @@ Swagger screenshots demonstrate:
 * Role-based authorization restrictions
 * DTO validation errors
 * CRUD operations working successfully
-
-These screenshots are included with the submission.
