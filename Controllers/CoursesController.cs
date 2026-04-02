@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CourseManagementAPI.DTOs;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -14,60 +15,116 @@ namespace CourseManagementAPI.Controllers
             _context = context;
         }
 
-        // GET: api/courses
+        // =========================
+        // GET: All Courses
+        // =========================
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
+        public async Task<IActionResult> GetAll()
         {
-            return await _context.Courses
-                .Include(c => c.Instructor)
-                .Include(c => c.Enrollments)
+            var courses = await _context.Courses
+                .AsNoTracking()
+                .Select(c => new CourseDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    InstructorId = c.InstructorId,
+                    InstructorName = c.Instructor.Name
+                })
                 .ToListAsync();
+
+            return Ok(courses);
         }
 
-        // GET: api/courses/1
+        // =========================
+        // GET: Course by Id
+        // =========================
         [HttpGet("{id}")]
-        public async Task<ActionResult<Course>> GetCourse(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             var course = await _context.Courses
-                .Include(c => c.Instructor)
-                .Include(c => c.Enrollments)
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .Select(c => new CourseDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    InstructorId = c.InstructorId,
+                    InstructorName = c.Instructor.Name
+                })
+                .FirstOrDefaultAsync();
+
+            if (course == null)
+                return NotFound();
+
+            return Ok(course);
+        }
+
+        // =========================
+        // POST: Create Course
+        // =========================
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateCourseDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Check instructor exists
+            var instructorExists = await _context.Instructors
+                .AnyAsync(i => i.Id == dto.InstructorId);
+
+            if (!instructorExists)
+                return NotFound("Instructor not found");
+
+            var course = new Course
+            {
+                Title = dto.Title,
+                InstructorId = dto.InstructorId
+            };
+
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync();
+
+            return Ok("Course created successfully");
+        }
+
+        // =========================
+        // PUT: Update Course
+        // =========================
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, UpdateCourseDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var course = await _context.Courses
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)
                 return NotFound();
 
-            return course;
-        }
+            // Check instructor exists
+            var instructorExists = await _context.Instructors
+                .AnyAsync(i => i.Id == dto.InstructorId);
 
-        // POST: api/courses
-        [HttpPost]
-        public async Task<ActionResult<Course>> CreateCourse(Course course)
-        {
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
+            if (!instructorExists)
+                return NotFound("Instructor not found");
 
-            return CreatedAtAction(nameof(GetCourse), new { id = course.Id }, course);
-        }
-
-        // PUT: api/courses/1
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCourse(int id, Course course)
-        {
-            if (id != course.Id)
-                return BadRequest();
-
-            _context.Entry(course).State = EntityState.Modified;
+            course.Title = dto.Title;
+            course.InstructorId = dto.InstructorId;
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/courses/1
+        // =========================
+        // DELETE: Remove Course
+        // =========================
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCourse(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var course = await _context.Courses.FindAsync(id);
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)
                 return NotFound();
