@@ -409,35 +409,35 @@ POST /api/Enrollment
 # Screenshots
 
 ## Successful Login and JWT Token Generation
-![Login Success](screenshots/login-success.png)
+![Login Success](screenshots/login-success.jpeg)
 
 ## Invalid Login Attempt (Unauthorized Access)
-![Invalid Login](screenshots/login-invalid.png)
+![Invalid Login](screenshots/login-invalid.jpeg)
 
 ## Access Denied Without Authentication Token
-![Unauthorized Access](screenshots/unauthorized-access.png)
+![Unauthorized Access](screenshots/unauthorized-access.jpeg)
 
 ## Swagger Authorization Using JWT Token
-![Swagger Authorization](screenshots/swagger-authorize.png)
+![Swagger Authorization](screenshots/swagger-authorize.jpeg)
 
 ## Retrieve Courses After Authentication
-![Get Courses](screenshots/get-courses.png)
+![Get Courses](screenshots/get-courses.jpeg)
 
 ## Role-Based Authorization Restricting Student Access
-![Student Login](screenshots/student-login.png)
+![Student Login](screenshots/student-login.jpeg)
 
 
 ## Role-Based Authorization Restricting Student Access
-![Student Forbidden](screenshots/student-forbidden.png)
+![Student Forbidden](screenshots/student-forbidden.jpeg)
 
 ## Admin Creating Course Successfully
-![Admin Create Course](screenshots/admin-create.png)
+![Admin Create Course](screenshots/admin-create.jpeg)
 
 ## Many-to-Many Relationship Between Students and Courses
-![Student Enrollments](screenshots/enrollement.png)
+![Student Enrollments](screenshots/enrollement.jpeg)
 
 ## Delete Instructor Using Protected Endpoint
-![Delete Instructor](screenshots/delete-instructor.png)
+![Delete Instructor](screenshots/delete-instructor.jpeg)
 
 
 
