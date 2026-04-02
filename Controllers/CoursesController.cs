@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace CourseManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // لازم يكون logged in
     public class CourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
@@ -37,6 +39,7 @@ namespace CourseManagementAPI.Controllers
 
         // POST: api/course
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(CreateCourseDto dto)
         {
             await _courseService.CreateAsync(dto);
@@ -45,6 +48,7 @@ namespace CourseManagementAPI.Controllers
 
         // PUT: api/course/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, UpdateCourseDto dto)
         {
             await _courseService.UpdateAsync(id, dto);
@@ -53,6 +57,7 @@ namespace CourseManagementAPI.Controllers
 
         // DELETE: api/course/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             await _courseService.DeleteAsync(id);

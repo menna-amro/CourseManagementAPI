@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace CourseManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class StudentController : ControllerBase
     {
         private readonly IStudentService _studentService;
@@ -15,7 +17,6 @@ namespace CourseManagementAPI.Controllers
             _studentService = studentService;
         }
 
-        // GET: api/student
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -23,7 +24,6 @@ namespace CourseManagementAPI.Controllers
             return Ok(students);
         }
 
-        // GET: api/student/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -35,8 +35,8 @@ namespace CourseManagementAPI.Controllers
             return Ok(student);
         }
 
-        // POST: api/student
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateStudentDto dto)
         {
             if (!ModelState.IsValid)
@@ -46,8 +46,8 @@ namespace CourseManagementAPI.Controllers
             return Ok("Student created successfully");
         }
 
-        // PUT: api/student/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentDto dto)
         {
             if (!ModelState.IsValid)
@@ -61,8 +61,8 @@ namespace CourseManagementAPI.Controllers
             return Ok("Student updated successfully");
         }
 
-        // DELETE: api/student/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var existingStudent = await _studentService.GetByIdAsync(id);

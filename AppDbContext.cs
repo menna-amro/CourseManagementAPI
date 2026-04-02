@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-
+using CourseManagementAPI.Models;
 
 namespace CourseManagementAPI
 {
@@ -10,11 +10,14 @@ namespace CourseManagementAPI
         {
         }
 
+        // DbSets
         public DbSet<Student> Students { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Instructor> Instructors { get; set; }
         public DbSet<InstructorProfile> InstructorProfiles { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
+
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,6 +52,31 @@ namespace CourseManagementAPI
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Seed Users (for testing)
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = 1,
+                    Username = "admin",
+                    Password = "123456",
+                    Role = "Admin"
+                },
+                new User
+                {
+                    Id = 2,
+                    Username = "instructor1",
+                    Password = "123456",
+                    Role = "Instructor"
+                },
+                new User
+                {
+                    Id = 3,
+                    Username = "student1",
+                    Password = "123456",
+                    Role = "Student"
+                }
+            );
         }
     }
 }
