@@ -16,53 +16,79 @@ namespace CourseManagementAPI.Controllers
 
         // GET: api/students
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
+        public async Task<ActionResult<IEnumerable<StudentDto>>> GetStudents()
         {
-            return await _context.Students.ToListAsync();
+            var students = await _context.Students
+                .Select(s => new StudentDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Email = s.Email
+                })
+                .ToListAsync();
+
+            return Ok(students);
         }
 
         // GET: api/students/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Student>> GetStudent(int id)
+        public async Task<ActionResult<StudentDto>> GetStudent(int id)
         {
+            var student = await _context.Students
+                .Where(s => s.Id == id)
+                .Select(s => new StudentDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Email = s.Email
+                })
+                .FirstOrDefaultAsync();
+
+            if (student == null)
+                return NotFound();
+
+            return Ok(student);
+        }
+
+        // POST: api/students
+        [HttpPost]
+        public async Task<ActionResult<StudentDto>> CreateStudent(CreateStudentDto dto)
+        {
+            var student = new Student
+            {
+                Name = dto.Name,
+                Email = dto.Email
+            };
+
+            _context.Students.Add(student);
+            await _context.SaveChangesAsync();
+
+            var result = new StudentDto
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Email = student.Email
+            };
+
+            return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, result);
+        }
+
+        // PUT: api/students/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateStudent(int id, UpdateStudentDto dto)
+        {
+            if (id != dto.Id)
+                return BadRequest();
+
             var student = await _context.Students.FindAsync(id);
 
             if (student == null)
                 return NotFound();
 
-            return student;
-        }
+            student.Name = dto.Name;
+            student.Email = dto.Email;
 
-        // POST: api/students
-        [HttpPost]
-        public async Task<ActionResult<Student>> CreateStudent(Student student)
-        {
-            _context.Students.Add(student);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetStudent), new { id = student.Id }, student);
-        }
-
-        // PUT: api/students/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(int id, Student student)
-        {
-            if (id != student.Id)
-                return BadRequest();
-
-            _context.Entry(student).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Students.Any(e => e.Id == id))
-                    return NotFound();
-                else
-                    throw;
-            }
 
             return NoContent();
         }
