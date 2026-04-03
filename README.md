@@ -329,7 +329,7 @@ dotnet run
 6. Open Swagger
 
 ```
-https://localhost:xxxx/swagger
+http://localhost:xxxx/swagger
 ```
 
 ---
