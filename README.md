@@ -388,7 +388,7 @@ Authorization: Bearer YOUR_TOKEN
 
 ### Login
 
-POST /api/Auth/login
+POST `/api/Auth/login`
 
 Request Body Example:
 
@@ -413,7 +413,7 @@ Response Example:
 
 ### Get All Courses
 
-GET /api/Course
+GET `/api/Course`
 
 Authorization Required: Yes
 
@@ -434,7 +434,7 @@ Response Example:
 
 ### Create Course (Admin only)
 
-POST /api/Course
+POST `/api/Course`
 
 Request Body Example:
 
@@ -455,11 +455,11 @@ Course created successfully
 
 ### Update Course (Admin only)
 
-PUT /api/Course/{id}
+PUT `/api/Course/{id}`
 
 Example:
 
-PUT /api/Course/1
+PUT `/api/Course/1`
 
 Request Body Example:
 
@@ -480,11 +480,11 @@ Course updated successfully
 
 ### Delete Course (Admin only)
 
-DELETE /api/Course/{id}
+DELETE `/api/Course/{id}`
 
 Example:
 
-DELETE /api/Course/1
+DELETE `/api/Course/1`
 
 Response Example:
 
@@ -498,7 +498,7 @@ Course deleted successfully
 
 ### Get All Students
 
-GET /api/Student
+GET `/api/Student`
 
 Response Example:
 
@@ -516,7 +516,7 @@ Response Example:
 
 ### Create Student
 
-POST /api/Student
+POST `/api/Student`
 
 Request Body Example:
 
@@ -537,11 +537,11 @@ Student created successfully
 
 ### Update Student
 
-PUT /api/Student/{id}
+PUT `/api/Student/{id}`
 
 Example:
 
-PUT /api/Student/1
+PUT `/api/Student/1`
 
 Request Body Example:
 
@@ -562,11 +562,11 @@ Student updated successfully
 
 ### Delete Student
 
-DELETE /api/Student/{id}
+DELETE `/api/Student/{id}`
 
 Example:
 
-DELETE /api/Student/1
+DELETE `/api/Student/1`
 
 Response Example:
 
@@ -580,7 +580,7 @@ Student deleted successfully
 
 ### Get All Instructors
 
-GET /api/Instructor
+GET `/api/Instructor`
 
 Response Example:
 
@@ -598,7 +598,7 @@ Response Example:
 
 ### Create Instructor
 
-POST /api/Instructor
+POST `/api/Instructor`
 
 Request Body Example:
 
@@ -619,11 +619,11 @@ Instructor created successfully
 
 ### Delete Instructor
 
-DELETE /api/Instructor/{id}
+DELETE `/api/Instructor/{id}`
 
 Example:
 
-DELETE /api/Instructor/1
+DELETE `/api/Instructor/1`
 
 Response Example:
 
@@ -637,7 +637,7 @@ Instructor deleted successfully
 
 ### Enroll Student in Course
 
-POST /api/Enrollment
+POST `/api/Enrollment`
 
 Request Body Example:
 
@@ -658,11 +658,11 @@ Enrollment created successfully
 
 ### Get Courses for Student
 
-GET /api/Enrollments/student/{studentId}
+GET `/api/Enrollments/student/{studentId}`
 
 Example:
 
-GET /api/Enrollments/student/1
+GET `/api/Enrollments/student/1`
 
 Response Example:
 
@@ -681,11 +681,11 @@ Response Example:
 
 ### Get Students in Course
 
-GET /api/Enrollments/course/{courseId}
+GET `/api/Enrollments/course/{courseId}`
 
 Example:
 
-GET /api/Enrollments/course/1
+GET `/api/Enrollments/course/1`
 
 Response Example:
 
@@ -704,11 +704,11 @@ Response Example:
 
 ### Delete Enrollment
 
-DELETE /api/Enrollment/{studentId}/{courseId}
+DELETE `/api/Enrollment/{studentId}/{courseId}`
 
 Example:
 
-DELETE /api/Enrollment/1/1
+DELETE `/api/Enrollment/1/1`
 
 Response Example:
 
