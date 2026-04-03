@@ -376,67 +376,377 @@ Although this project uses JWT tokens in Authorization headers for simplicity, p
 
 # API Endpoint Examples
 
-Authentication:
+This section demonstrates example API requests and responses using Swagger.
 
-```
+All protected endpoints require a JWT token in:
+
+Authorization: Bearer YOUR_TOKEN
+
+--------------------------------------------------
+
+## Authentication
+
+### Login
+
 POST /api/Auth/login
+
+Request Body Example:
+
+```json
+{
+  "username": "admin",
+  "password": "123456"
+}
 ```
 
-Courses:
+Response Example:
 
+```json
+{
+  "token": "JWT_TOKEN_HERE"
+}
 ```
+
+--------------------------------------------------
+
+## Courses Endpoints
+
+### Get All Courses
+
 GET /api/Course
-POST /api/Course
-PUT /api/Course/{id}
-DELETE /api/Course/{id}
-```
 
-Students:
+Authorization Required: Yes
 
-```
-GET /api/Student
-POST /api/Student
-```
+Response Example:
 
-Enrollments:
-
-```
-POST /api/Enrollment
+```json
+[
+  {
+    "id": 2,
+    "title": "Web",
+    "instructorId": 1,
+    "instructorName": "Dr Ahmed"
+  }
+]
 ```
 
 ---
 
+### Create Course (Admin only)
+
+POST /api/Course
+
+Request Body Example:
+
+```json
+{
+  "title": "AI",
+  "instructorId": 1
+}
+```
+
+Response Example:
+
+```
+Course created successfully
+```
+
+---
+
+### Update Course (Admin only)
+
+PUT /api/Course/{id}
+
+Example:
+
+PUT /api/Course/1
+
+Request Body Example:
+
+```json
+{
+  "title": "Machine Learning",
+  "instructorId": 1
+}
+```
+
+Response Example:
+
+```
+Course updated successfully
+```
+
+---
+
+### Delete Course (Admin only)
+
+DELETE /api/Course/{id}
+
+Example:
+
+DELETE /api/Course/1
+
+Response Example:
+
+```
+Course deleted successfully
+```
+
+--------------------------------------------------
+
+## Students Endpoints
+
+### Get All Students
+
+GET /api/Student
+
+Response Example:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Menna",
+    "email": "menna@test.com"
+  }
+]
+```
+
+---
+
+### Create Student
+
+POST /api/Student
+
+Request Body Example:
+
+```json
+{
+  "name": "Menna",
+  "email": "menna@test.com"
+}
+```
+
+Response Example:
+
+```
+Student created successfully
+```
+
+---
+
+### Update Student
+
+PUT /api/Student/{id}
+
+Example:
+
+PUT /api/Student/1
+
+Request Body Example:
+
+```json
+{
+  "name": "Yara",
+  "email": "yara@test.com"
+}
+```
+
+Response Example:
+
+```
+Student updated successfully
+```
+
+---
+
+### Delete Student
+
+DELETE /api/Student/{id}
+
+Example:
+
+DELETE /api/Student/1
+
+Response Example:
+
+```
+Student deleted successfully
+```
+
+--------------------------------------------------
+
+## Instructors Endpoints
+
+### Get All Instructors
+
+GET /api/Instructor
+
+Response Example:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Dr Ahmed",
+    "email": "ahmed@test.com"
+  }
+]
+```
+
+---
+
+### Create Instructor
+
+POST /api/Instructor
+
+Request Body Example:
+
+```json
+{
+  "name": "Dr Ahmed",
+  "email": "ahmed@test.com"
+}
+```
+
+Response Example:
+
+```
+Instructor created successfully
+```
+
+---
+
+### Delete Instructor
+
+DELETE /api/Instructor/{id}
+
+Example:
+
+DELETE /api/Instructor/1
+
+Response Example:
+
+```
+Instructor deleted successfully
+```
+
+--------------------------------------------------
+
+## Enrollment Endpoints (Many-to-Many Relationship)
+
+### Enroll Student in Course
+
+POST /api/Enrollment
+
+Request Body Example:
+
+```json
+{
+  "studentId": 1,
+  "courseId": 1
+}
+```
+
+Response Example:
+
+```
+Enrollment created successfully
+```
+
+---
+
+### Get Courses for Student
+
+GET /api/Enrollments/student/{studentId}
+
+Example:
+
+GET /api/Enrollments/student/1
+
+Response Example:
+
+```json
+[
+  {
+    "studentId": 1,
+    "courseId": 2,
+    "studentName": "Menna",
+    "courseTitle": "Web"
+  }
+]
+```
+
+---
+
+### Get Students in Course
+
+GET /api/Enrollments/course/{courseId}
+
+Example:
+
+GET /api/Enrollments/course/1
+
+Response Example:
+
+```json
+[
+  {
+    "studentId": 1,
+    "courseId": 3,
+    "studentName": "Menna",
+    "courseTitle": "AI"
+  }
+]
+```
+
+---
+
+### Delete Enrollment
+
+DELETE /api/Enrollment/{studentId}/{courseId}
+
+Example:
+
+DELETE /api/Enrollment/1/1
+
+Response Example:
+
+```
+Enrollment deleted successfully
+```
+
 # Screenshots
 
-## Successful Login and JWT Token Generation
+* Successful Login and JWT Token Generation
 ![Login Success](screenshots/login-success.jpeg)
 
-## Invalid Login Attempt (Unauthorized Access)
+* Invalid Login Attempt (Unauthorized Access)
 ![Invalid Login](screenshots/login-invalid.jpeg)
 
-## Access Denied Without Authentication Token
+* Access Denied Without Authentication Token
 ![Unauthorized Access](screenshots/unauthorized-access.jpeg)
 
-## Swagger Authorization Using JWT Token
+* Swagger Authorization Using JWT Token
 ![Swagger Authorization](screenshots/swagger-authorize.jpeg)
 
-## Retrieve Courses After Authentication
+* Retrieve Courses After Authentication
 ![Get Courses](screenshots/get-courses.jpeg)
 
-## Successful Student Login and JWT Token Generation
+* Successful Student Login and JWT Token Generation
 ![Student Login](screenshots/student-login.jpeg)
 
 
-## Role-Based Authorization Restricting Student Access
+* Role-Based Authorization Restricting Student Access
 ![Student Forbidden](screenshots/student-forbidden.jpeg)
 
-## Admin Creating Course Successfully
+* Admin Creating Course Successfully
 ![Admin Create Course](screenshots/admin-create.jpeg)
 
-## Many-to-Many Relationship Between Students and Courses
+* Many-to-Many Relationship Between Students and Courses
 ![Student Enrollments](screenshots/enrollement.jpeg)
 
-## Delete Instructor Using Protected Endpoint
+* Delete Instructor Using Protected Endpoint
 ![Delete Instructor](screenshots/delete-instructor.jpeg)
 
 

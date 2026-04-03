@@ -7,7 +7,7 @@ namespace CourseManagementAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // لازم يكون logged in
+    [Authorize]
     public class CourseController : ControllerBase
     {
         private readonly ICourseService _courseService;
