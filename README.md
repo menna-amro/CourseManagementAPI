@@ -718,35 +718,35 @@ Enrollment deleted successfully
 
 # Screenshots
 
-* Successful Login and JWT Token Generation
+## Successful Login and JWT Token Generation
 ![Login Success](screenshots/login-success.jpeg)
 
-* Invalid Login Attempt (Unauthorized Access)
+## Invalid Login Attempt (Unauthorized Access)
 ![Invalid Login](screenshots/login-invalid.jpeg)
 
-* Access Denied Without Authentication Token
+## Access Denied Without Authentication Token
 ![Unauthorized Access](screenshots/unauthorized-access.jpeg)
 
-* Swagger Authorization Using JWT Token
+## Swagger Authorization Using JWT Token
 ![Swagger Authorization](screenshots/swagger-authorize.jpeg)
 
-* Retrieve Courses After Authentication
+## Retrieve Courses After Authentication
 ![Get Courses](screenshots/get-courses.jpeg)
 
-* Successful Student Login and JWT Token Generation
+## Successful Student Login and JWT Token Generation
 ![Student Login](screenshots/student-login.jpeg)
 
 
-* Role-Based Authorization Restricting Student Access
+## Role-Based Authorization Restricting Student Access
 ![Student Forbidden](screenshots/student-forbidden.jpeg)
 
-* Admin Creating Course Successfully
+## Admin Creating Course Successfully
 ![Admin Create Course](screenshots/admin-create.jpeg)
 
-* Many-to-Many Relationship Between Students and Courses
+## Many-to-Many Relationship Between Students and Courses
 ![Student Enrollments](screenshots/enrollement.jpeg)
 
-* Delete Instructor Using Protected Endpoint
+## Delete Instructor Using Protected Endpoint
 ![Delete Instructor](screenshots/delete-instructor.jpeg)
 
 
