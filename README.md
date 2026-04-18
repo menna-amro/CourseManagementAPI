@@ -2,20 +2,30 @@
 
 ## Project Description
 
-The **Course Management System API** is a RESTful Web API built using **ASP.NET Core** and **Entity Framework Core**.
-The system manages university courses, students, instructors, instructor profiles, and enrollments.
+The **Course Management System API** is a RESTful Web API built using **ASP.NET Core**, **Entity Framework Core**, and **ASP.NET Identity**.
 
-This project demonstrates the implementation of:
+The system manages:
 
-* Entity relationships
-* Dependency Injection
-* Service layer architecture
-* DTO usage with validation
-* JWT Authentication
-* Role-based Authorization
-* LINQ query optimization
-* AsNoTracking() performance optimization
-* Swagger API documentation
+- Students
+- Instructors
+- Courses
+- Instructor Profiles
+- Enrollments
+- Authenticated Users
+
+This project demonstrates:
+
+- Entity relationships
+- Dependency Injection
+- Service layer architecture
+- DTO usage with validation
+- ASP.NET Identity authentication
+- JWT cookie-based authentication
+- Role-based Authorization
+- Secure profile ownership using JWT claims
+- LINQ query optimization
+- AsNoTracking() performance optimization
+- Swagger API documentation
 
 This assignment serves as the foundation for the final course project.
 
@@ -25,44 +35,102 @@ This assignment serves as the foundation for the final course project.
 
 ## ASP.NET Core Web API
 
-Used to build RESTful endpoints for handling HTTP requests such as GET, POST, PUT, and DELETE.
+Used to build RESTful endpoints for handling HTTP requests such as:
+
+GET  
+POST  
+PUT  
+DELETE
+
+---
 
 ## Entity Framework Core
 
 Used as the ORM (Object Relational Mapper) to communicate with SQL Server and manage database relationships.
 
+---
+
 ## SQL Server
 
 Used as the relational database to store application data.
+
+---
+
+## ASP.NET Identity
+
+Used for secure user management including:
+
+- Password hashing
+- Role-based authentication
+- Secure user ownership
+- Integration with JWT authentication
+
+---
 
 ## Dependency Injection
 
 Used to inject database context and services into controllers for clean architecture.
 
-## JWT Authentication
+Controllers do NOT communicate directly with the database.
 
-Used to authenticate users securely and generate access tokens after login.
+---
+
+## JWT Authentication (HTTP-Only Cookies)
+
+JWT tokens are generated after login and stored securely inside **HTTP-Only cookies**.
+
+Benefits:
+
+- Prevent JavaScript access to authentication tokens
+- Protect against Cross-Site Scripting (XSS)
+- Automatically attach to authenticated requests
+- Improve authentication security
+
+---
 
 ## Role-Based Authorization
 
-Used to restrict access to certain endpoints depending on user roles such as Admin, Instructor, and Student.
+Access to endpoints is restricted depending on user roles:
+
+Admin  
+Instructor  
+Student
+
+Example:
+
+```csharp
+[Authorize]
+```
+
+```csharp
+[Authorize(Roles = "Admin")]
+```
+
+---
 
 ## Swagger (OpenAPI)
 
-Used to document API endpoints and test requests directly from the browser.
+Swagger is used to:
+
+- Document API endpoints
+- Test requests
+- Authenticate users
+- View request/response models
+
+Swagger runs automatically when the project starts.
 
 ---
 
 # System Entities
 
-The system includes the following main entities:
+The system includes the following entities:
 
-* Student
-* Instructor
-* Course
-* InstructorProfile
-* Enrollment
-* User (Authentication entity)
+- Student
+- Instructor
+- Course
+- InstructorProfile
+- Enrollment
+- User (ASP.NET Identity authentication entity)
 
 ---
 
@@ -76,17 +144,36 @@ Instructor → InstructorProfile
 
 Each instructor has exactly one profile containing additional information.
 
+---
+
 ## One-to-Many Relationship
 
 Instructor → Courses
 
 Each instructor can teach multiple courses.
 
+---
+
 ## Many-to-Many Relationship
 
 Student ↔ Course (via Enrollment table)
 
-Students can enroll in multiple courses, and courses can contain multiple students.
+Students can enroll in multiple courses and courses can contain multiple students.
+
+---
+
+# Secure Profile Ownership Design
+
+Each authenticated user creates **only their own profile**.
+
+The system extracts **UserId from JWT claims** instead of accepting it from request bodies.
+
+Example:
+
+Students cannot create profiles for other students  
+Instructors cannot create profiles for other instructors
+
+This ensures secure ownership of profiles.
 
 ---
 
@@ -96,15 +183,15 @@ The system implements a service layer between controllers and database context.
 
 Implemented services:
 
-* CourseService
-* StudentService
-* InstructorService
-* EnrollmentService
-* JwtService
-
-Services use **Dependency Injection** to access the database context.
+- CourseService
+- StudentService
+- InstructorService
+- EnrollmentService
+- JwtService
 
 Controllers do NOT communicate directly with the database.
+
+Services use Dependency Injection to access the database context.
 
 ---
 
@@ -122,6 +209,8 @@ CreateCourseDto
 
 Used when creating new records.
 
+---
+
 ## Update DTOs
 
 Example:
@@ -129,6 +218,8 @@ Example:
 UpdateCourseDto
 
 Used when updating existing records.
+
+---
 
 ## Read DTOs
 
@@ -148,11 +239,11 @@ DTO validation is implemented using Data Annotation attributes:
 
 Examples:
 
-* Required
-* MaxLength
-* MinLength
-* Range
-* EmailAddress
+- Required
+- MaxLength
+- MinLength
+- Range
+- EmailAddress
 
 Invalid requests return:
 
@@ -162,58 +253,141 @@ Validation occurs before database operations.
 
 ---
 
-# Authentication
+# Authentication Flow
 
-JWT Authentication is implemented.
+## Register User
 
-Authentication flow:
+POST /api/Auth/register
 
-1. User sends username and password
-2. Server validates credentials
-3. Server generates JWT token
-4. Client sends token in Authorization header
+Example:
 
-Example header:
-
-```
-Authorization: Bearer YOUR_TOKEN
-```
-
-Authentication endpoint:
-
-```
-POST /api/Auth/login
+```json
+{
+  "username": "admin1",
+  "password": "123456",
+  "role": "Admin"
+}
 ```
 
 ---
 
-# Authorization
+## Login User
 
-Role-Based Authorization is implemented using:
+POST /api/Auth/login
 
+Server:
+
+- validates credentials
+- generates JWT token
+- stores token inside HTTP-only cookie
+
+Cookie is automatically attached to future requests.
+
+---
+
+## Logout User
+
+POST /api/Auth/logout
+
+Removes authentication cookie.
+
+---
+
+# Authorization Rules
+
+## Admin Permissions
+
+Admin users can:
+
+- Create courses
+- Update courses
+- Delete courses
+- View all students
+- Delete students
+- View all instructors
+- Delete instructors
+- Enroll any student in any course
+
+---
+
+## Instructor Permissions
+
+Instructor users can:
+
+Create their own instructor profile:
+
+POST /api/Instructor/me
+
+View students enrolled in their courses:
+
+GET /api/Enrollments/course/{courseId}
+
+---
+
+## Student Permissions
+
+Student users can:
+
+Create their own student profile:
+
+POST /api/Student/me
+
+View their own profile:
+
+GET /api/Student/me
+
+Enroll themselves in courses:
+
+POST /api/Enrollments
+
+Example:
+
+```json
+{
+  "courseId": 2
+}
 ```
-[Authorize]
+
+View their enrolled courses:
+
+GET /api/Enrollments/my-courses
+
+---
+
+# Enrollment Security Design
+
+Students cannot enroll other students.
+
+StudentId is NOT accepted from request body.
+
+Instead:
+
+UserId is extracted from JWT claims and resolved internally into StudentId.
+
+Admins can enroll any student using:
+
+POST /api/Enrollments/admin
+
+Example:
+
+```json
+{
+  "studentId": 1,
+  "courseId": 2
+}
 ```
 
-and
+Students enroll themselves using:
 
+POST /api/Enrollments
+
+Example:
+
+```json
+{
+  "courseId": 2
+}
 ```
-[Authorize(Roles = "Admin")]
-```
-
-Example roles:
-
-* Admin
-* Instructor
-* Student
-
-Only Admin users can:
-
-* Create courses
-* Update courses
-* Delete courses
-
-Other users can only view data.
 
 ---
 
@@ -223,7 +397,7 @@ LINQ Select() projections are used to return only required fields.
 
 Example:
 
-```
+```csharp
 _context.Courses
 .AsNoTracking()
 .Select(c => new CourseDto
@@ -241,7 +415,7 @@ This improves performance and reduces memory usage.
 
 All read-only queries use:
 
-```
+```csharp
 AsNoTracking()
 ```
 
@@ -255,7 +429,7 @@ Async methods are used for database access:
 
 Examples:
 
-```
+```csharp
 ToListAsync()
 FirstOrDefaultAsync()
 SaveChangesAsync()
@@ -272,61 +446,124 @@ Entity Framework Core migrations are used to create and update the database sche
 Example commands:
 
 ```
-dotnet ef migrations add InitialCreate
+dotnet ef migrations add InitialIdentitySetup
 dotnet ef database update
 ```
 
 ---
 
-# Swagger API Documentation
 
-Swagger is integrated for testing and documenting API endpoints.
+## API Endpoints Overview
 
-Swagger allows:
+### Authentication
 
-* Testing endpoints
-* Sending tokens
-* Viewing request/response models
+| Endpoint | Method | Access |
+|---------|--------|--------|
+| /api/Auth/register | POST | Public |
+| /api/Auth/login | POST | Public |
+| /api/Auth/logout | POST | Authenticated |
 
-Swagger runs automatically when the project starts.
+### Students
 
----
+| Endpoint | Method | Access |
+|---------|--------|--------|
+| /api/Student/me | POST | Student |
+| /api/Student/me | GET | Student |
+| /api/Student | GET | Admin |
+| /api/Student/{id} | DELETE | Admin |
+
+### Instructors
+
+| Endpoint | Method | Access |
+|---------|--------|--------|
+| /api/Instructor/me | POST | Instructor |
+| /api/Instructor | GET | Admin |
+
+### Courses
+
+| Endpoint | Method | Access |
+|---------|--------|--------|
+| /api/Course | GET | Authenticated |
+| /api/Course | POST | Admin |
+| /api/Course/{id} | PUT | Admin |
+| /api/Course/{id} | DELETE | Admin |
+
+### Enrollments
+
+| Endpoint | Method | Access |
+|---------|--------|--------|
+| /api/Enrollments | POST | Student |
+| /api/Enrollments/admin | POST | Admin |
+| /api/Enrollments/my-courses | GET | Student |
+| /api/Enrollments/course/{id} | GET | Instructor / Admin |
+
+
+
+## Security Design
+
+The system implements multiple security layers:
+
+- ASP.NET Identity for password hashing and secure authentication
+- JWT authentication stored inside HTTP-only cookies
+- Role-based authorization (Admin / Instructor / Student)
+- Profile ownership validation using JWT claims
+- Prevention of duplicate enrollments
+- Prevention of duplicate instructor/student profiles
+- Protection against unauthorized data access between students
+
+
+## Database Design Strategy
+
+The database schema was designed using Entity Framework Core relationships:
+
+- One-to-One → Instructor ↔ InstructorProfile
+- One-to-Many → Instructor → Courses
+- Many-to-Many → Students ↔ Courses (via Enrollment table)
+
+Composite keys were implemented inside the Enrollment table to prevent duplicate registrations.
+
+Unique constraints were applied to:
+
+- Student email
+- Instructor email
+- Course title per instructor
+
+
+
 
 # How to Run the Project
 
-Follow these steps:
-
-1. Clone repository
+Clone repository:
 
 ```
 git clone REPOSITORY_URL
 ```
 
-2. Navigate to project folder
+Navigate to project folder:
 
 ```
 cd CourseManagementAPI
 ```
 
-3. Update connection string inside:
+Update connection string inside:
 
 ```
 appsettings.json
 ```
 
-4. Apply migrations
+Apply migrations:
 
 ```
 dotnet ef database update
 ```
 
-5. Run project
+Run project:
 
 ```
 dotnet run
 ```
 
-6. Open Swagger
+Open Swagger:
 
 ```
 http://localhost:xxxx/swagger
@@ -334,428 +571,34 @@ http://localhost:xxxx/swagger
 
 ---
 
-# Example Test Users
-
-The following seeded users are available:
-
-Admin:
-
-```
-username: admin
-password: 123456
-```
-
-Instructor:
-
-```
-username: instructor1
-password: 123456
-```
-
-Student:
-
-```
-username: student1
-password: 123456
-```
-
----
-
-# Why HTTP-Only Cookies Are Industry Standard
-
-HTTP-only cookies are commonly used in production authentication systems because they:
-
-* Prevent JavaScript access to authentication tokens
-* Protect against Cross-Site Scripting (XSS) attacks
-* Automatically attach to requests securely
-* Reduce token exposure in browser storage
-
-Although this project uses JWT tokens in Authorization headers for simplicity, production systems often store authentication tokens inside HTTP-only cookies for enhanced security.
-
----
-
-# API Endpoint Examples
-
-This section demonstrates example API requests and responses using Swagger.
-
-All protected endpoints require a JWT token in:
-
-Authorization: Bearer YOUR_TOKEN
-
---------------------------------------------------
-
-## Authentication
-
-### Login
-
-POST `/api/Auth/login`
-
-Request Body Example:
-
-```json
-{
-  "username": "admin",
-  "password": "123456"
-}
-```
-
-Response Example:
-
-```json
-{
-  "token": "JWT_TOKEN_HERE"
-}
-```
-
---------------------------------------------------
-
-## Courses Endpoints
-
-### Get All Courses
-
-GET `/api/Course`
-
-Authorization Required: Yes
-
-Response Example:
-
-```json
-[
-  {
-    "id": 2,
-    "title": "Web",
-    "instructorId": 1,
-    "instructorName": "Dr Ahmed"
-  }
-]
-```
-
----
-
-### Create Course (Admin only)
-
-POST `/api/Course`
-
-Request Body Example:
-
-```json
-{
-  "title": "AI",
-  "instructorId": 1
-}
-```
-
-Response Example:
-
-```
-Course created successfully
-```
-
----
-
-### Update Course (Admin only)
-
-PUT `/api/Course/{id}`
-
-Example:
-
-PUT `/api/Course/1`
-
-Request Body Example:
-
-```json
-{
-  "title": "Machine Learning",
-  "instructorId": 1
-}
-```
-
-Response Example:
-
-```
-Course updated successfully
-```
-
----
-
-### Delete Course (Admin only)
-
-DELETE `/api/Course/{id}`
-
-Example:
-
-DELETE `/api/Course/1`
-
-Response Example:
-
-```
-Course deleted successfully
-```
-
---------------------------------------------------
-
-## Students Endpoints
-
-### Get All Students
-
-GET `/api/Student`
-
-Response Example:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Menna",
-    "email": "menna@test.com"
-  }
-]
-```
-
----
-
-### Create Student
-
-POST `/api/Student`
-
-Request Body Example:
-
-```json
-{
-  "name": "Menna",
-  "email": "menna@test.com"
-}
-```
-
-Response Example:
-
-```
-Student created successfully
-```
-
----
-
-### Update Student
-
-PUT `/api/Student/{id}`
-
-Example:
-
-PUT `/api/Student/1`
-
-Request Body Example:
-
-```json
-{
-  "name": "Yara",
-  "email": "yara@test.com"
-}
-```
-
-Response Example:
-
-```
-Student updated successfully
-```
-
----
-
-### Delete Student
-
-DELETE `/api/Student/{id}`
-
-Example:
-
-DELETE `/api/Student/1`
-
-Response Example:
-
-```
-Student deleted successfully
-```
-
---------------------------------------------------
-
-## Instructors Endpoints
-
-### Get All Instructors
-
-GET `/api/Instructor`
-
-Response Example:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Dr Ahmed",
-    "email": "ahmed@test.com"
-  }
-]
-```
-
----
-
-### Create Instructor
-
-POST `/api/Instructor`
-
-Request Body Example:
-
-```json
-{
-  "name": "Dr Ahmed",
-  "email": "ahmed@test.com"
-}
-```
-
-Response Example:
-
-```
-Instructor created successfully
-```
-
----
-
-### Delete Instructor
-
-DELETE `/api/Instructor/{id}`
-
-Example:
-
-DELETE `/api/Instructor/1`
-
-Response Example:
-
-```
-Instructor deleted successfully
-```
-
---------------------------------------------------
-
-## Enrollment Endpoints (Many-to-Many Relationship)
-
-### Enroll Student in Course
-
-POST `/api/Enrollment`
-
-Request Body Example:
-
-```json
-{
-  "studentId": 1,
-  "courseId": 1
-}
-```
-
-Response Example:
-
-```
-Enrollment created successfully
-```
-
----
-
-### Get Courses for Student
-
-GET `/api/Enrollments/student/{studentId}`
-
-Example:
-
-GET `/api/Enrollments/student/1`
-
-Response Example:
-
-```json
-[
-  {
-    "studentId": 1,
-    "courseId": 2,
-    "studentName": "Menna",
-    "courseTitle": "Web"
-  }
-]
-```
-
----
-
-### Get Students in Course
-
-GET `/api/Enrollments/course/{courseId}`
-
-Example:
-
-GET `/api/Enrollments/course/1`
-
-Response Example:
-
-```json
-[
-  {
-    "studentId": 1,
-    "courseId": 3,
-    "studentName": "Menna",
-    "courseTitle": "AI"
-  }
-]
-```
-
----
-
-### Delete Enrollment
-
-DELETE `/api/Enrollment/{studentId}/{courseId}`
-
-Example:
-
-DELETE `/api/Enrollment/1/1`
-
-Response Example:
-
-```
-Enrollment deleted successfully
-```
 
 # Screenshots
 
-## Successful Login and JWT Token Generation
-![Login Success](screenshots/login-success.jpeg)
+## Successful admin registration using ASP.NET Identity authentication system
+![Register Success](screenshots/register.jpeg)
+
+## Successful login and secure JWT cookie generation using HTTP-only cookies
+![Login Success](screenshots/login.jpeg)
+
+![JWT Cookie Generation](screenshots/cookies.jpeg)
 
 ## Invalid Login Attempt (Unauthorized Access)
-![Invalid Login](screenshots/login-invalid.jpeg)
+![Invalid Login](screenshots/unauth_login.jpeg)
 
-## Access Denied Without Authentication Token
-![Unauthorized Access](screenshots/unauthorized-access.jpeg)
-
-## Swagger Authorization Using JWT Token
-![Swagger Authorization](screenshots/swagger-authorize.jpeg)
+## Unauthorized access attempt blocked before authentication
+![Unauthorized Access](screenshots/unauth_access.jpeg)
 
 ## Retrieve Courses After Authentication
-![Get Courses](screenshots/get-courses.jpeg)
+![Get Courses](screenshots/get_courses.jpeg)
 
-## Successful Student Login and JWT Token Generation
-![Student Login](screenshots/student-login.jpeg)
+## Instructor creates their own profile securely using JWT claim-based ownership
+![Instructor Created](screenshots/inst_created.jpeg)
 
+## Student enrolls themselves in a course using secure claim-based student identity
+![Student Enrollment](screenshots/student_enrollHimself.jpeg)
 
-## Role-Based Authorization Restricting Student Access
-![Student Forbidden](screenshots/student-forbidden.jpeg)
-
-## Admin Creating Course Successfully
-![Admin Create Course](screenshots/admin-create.jpeg)
-
-## Many-to-Many Relationship Between Students and Courses
-![Student Enrollments](screenshots/enrollement.jpeg)
-
-## Delete Instructor Using Protected Endpoint
-![Delete Instructor](screenshots/delete-instructor.jpeg)
+## Admins enroll students in a course using student Id and course Id
+![Student Enrollment](screenshots/student_enrolledByAdmin.jpeg)
 
 
 
-Swagger screenshots demonstrate:
-
-* Successful login
-* Unauthorized access without token
-* Authorized access with token
-* Role-based authorization restrictions
-* DTO validation errors
-* CRUD operations working successfully
