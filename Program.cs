@@ -3,7 +3,9 @@ using CourseManagementAPI;
 using CourseManagementAPI.Models;
 using CourseManagementAPI.Services.Implementations;
 using CourseManagementAPI.Services.Interfaces;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -20,21 +22,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 
+// ================= IDENTITY CONFIGURATION =================
+
+builder.Services
+.AddIdentity<User, IdentityRole>()
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+
 // ================= SERVICES =================
 
-// JWT
 builder.Services.AddScoped<IJwtService, JwtService>();
 
-// Course
 builder.Services.AddScoped<ICourseService, CourseService>();
 
-// Student
 builder.Services.AddScoped<IStudentService, StudentService>();
 
-// Instructor
 builder.Services.AddScoped<IInstructorService, InstructorService>();
 
-// Enrollment
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
 
 
@@ -47,7 +52,8 @@ builder.Services.AddControllers();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
-builder.Services.AddAuthentication(options =>
+builder.Services
+.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme =
         JwtBearerDefaults.AuthenticationScheme;
@@ -66,6 +72,7 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
 
             ValidIssuer = jwtSettings["Issuer"],
+
             ValidAudience = jwtSettings["Audience"],
 
             IssuerSigningKey =
@@ -73,12 +80,34 @@ builder.Services.AddAuthentication(options =>
                     Encoding.UTF8.GetBytes(jwtSettings["Key"]!)
                 )
         };
+
+
+    // READ TOKEN FROM COOKIE
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token =
+                context.Request.Cookies["jwt"];
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
 // ================= AUTHORIZATION =================
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy =
+        options.DefaultPolicy;
+});
 
 
 // ================= SWAGGER =================
@@ -87,28 +116,40 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    var securityScheme = new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Description = "Enter ONLY the token (Swagger adds Bearer automatically)",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-
-        Reference = new OpenApiReference
+    var securityScheme =
+        new OpenApiSecurityScheme
         {
-            Id = "Bearer",
-            Type = ReferenceType.SecurityScheme
-        }
-    };
+            Name = "jwt",
 
-    options.AddSecurityDefinition("Bearer", securityScheme);
+            Type = SecuritySchemeType.ApiKey,
+
+            In = ParameterLocation.Cookie,
+
+            Description =
+                "JWT stored automatically in HttpOnly cookie after login",
+
+            Reference =
+                new OpenApiReference
+                {
+                    Id = "CookieAuth",
+
+                    Type =
+                        ReferenceType.SecurityScheme
+                }
+        };
+
+    options.AddSecurityDefinition(
+        "CookieAuth",
+        securityScheme
+    );
 
     options.AddSecurityRequirement(
         new OpenApiSecurityRequirement
         {
-            { securityScheme, new string[] { } }
+            {
+                securityScheme,
+                new string[] { }
+            }
         }
     );
 });
@@ -121,8 +162,12 @@ var app = builder.Build();
 
 // ================= MIDDLEWARE =================
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 

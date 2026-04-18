@@ -1,10 +1,23 @@
-public class Student
+using System.ComponentModel.DataAnnotations;
+
+namespace CourseManagementAPI.Models
 {
-    public int Id { get; set; }
+    public class Student
+    {
+        public int Id { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+        [Required]
+        public string Name { get; set; } = string.Empty;
 
-    public string Email { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
 
-    public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+        public string UserId { get; set; } = string.Empty;
+
+        public User User { get; set; } = null!;
+
+        public ICollection<Enrollment> Enrollments { get; set; }
+            = new List<Enrollment>();
+    }
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
+using CourseManagementAPI.Models;
 
 namespace CourseManagementAPI.Services.Implementations
 {
@@ -43,18 +44,44 @@ namespace CourseManagementAPI.Services.Implementations
                 .FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(CreateInstructorDto dto)
+        public async Task CreateAsync(CreateInstructorDto dto, string userId)
         {
-            var instructor = new Instructor
-            {
-                Name = dto.Name,
-                Profile = new InstructorProfile
+            var instructorExists =
+                await _context.Instructors
+                .AnyAsync(i => i.UserId == userId);
+
+            if (instructorExists)
+                throw new Exception("Instructor profile already exists");
+
+
+            var studentExists =
+                await _context.Students
+                .AnyAsync(s => s.UserId == userId);
+
+            if (studentExists)
+                throw new Exception("Student cannot create instructor profile");
+
+
+            var instructor =
+                new Instructor
                 {
-                    Email = dto.Email
-                }
-            };
+                    Name = dto.Name,
+                    UserId = userId
+                };
+
+
+            var profile =
+                new InstructorProfile
+                {
+                    Email = dto.Email,
+                    Instructor = instructor
+                };
+
 
             _context.Instructors.Add(instructor);
+
+            _context.InstructorProfiles.Add(profile);
+
             await _context.SaveChangesAsync();
         }
 

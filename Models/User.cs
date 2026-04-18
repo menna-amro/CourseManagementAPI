@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace CourseManagementAPI.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
+
+        public Student? Student { get; set; }
+
+        public Instructor? Instructor { get; set; }
     }
 }

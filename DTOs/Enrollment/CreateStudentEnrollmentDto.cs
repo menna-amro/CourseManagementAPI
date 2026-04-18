@@ -2,11 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CourseManagementAPI.DTOs
 {
-    public class CreateEnrollmentDto
+    public class CreateStudentEnrollmentDto
     {
-        [Required]
-        public int StudentId { get; set; }
-
         [Required]
         public int CourseId { get; set; }
     }

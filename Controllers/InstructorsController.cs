@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
+using System.Security.Claims;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -10,59 +11,43 @@ namespace CourseManagementAPI.Controllers
     [Authorize]
     public class InstructorController : ControllerBase
     {
-        private readonly IInstructorService _instructorService;
+        private readonly IInstructorService _service;
 
-        public InstructorController(IInstructorService instructorService)
+        public InstructorController(IInstructorService service)
         {
-            _instructorService = instructorService;
+            _service = service;
         }
+
+
+        // CREATE MY PROFILE
+        [HttpPost("me")]
+        [Authorize(Roles = "Instructor")]
+        public async Task<IActionResult> CreateMyProfile(CreateInstructorDto dto)
+        {
+            var userId =
+                User.FindFirst("UserId")?.Value;
+
+            await _service.CreateAsync(dto, userId);
+
+            return Ok("Instructor profile created successfully");
+        }
+
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
-            var instructors = await _instructorService.GetAllAsync();
-            return Ok(instructors);
+            return Ok(await _service.GetAllAsync());
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var instructor = await _instructorService.GetByIdAsync(id);
-
-            if (instructor == null)
-                return NotFound();
-
-            return Ok(instructor);
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create(CreateInstructorDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            await _instructorService.CreateAsync(dto);
-            return Ok("Instructor created successfully");
-        }
-
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, UpdateInstructorDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            await _instructorService.UpdateAsync(id, dto);
-            return Ok("Instructor updated successfully");
-        }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _instructorService.DeleteAsync(id);
-            return Ok("Instructor deleted successfully");
+            await _service.DeleteAsync(id);
+
+            return Ok("Instructor deleted");
         }
     }
 }

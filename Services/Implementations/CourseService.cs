@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
+using CourseManagementAPI.Models;
 
 namespace CourseManagementAPI.Services.Implementations
 {

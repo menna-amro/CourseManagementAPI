@@ -1,10 +1,21 @@
-public class Instructor
+using System.ComponentModel.DataAnnotations;
+
+namespace CourseManagementAPI.Models
 {
-    public int Id { get; set; }
+    public class Instructor
+    {
+        public int Id { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+        [Required]
+        public string Name { get; set; } = string.Empty;
 
-    public InstructorProfile? Profile { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
-    public ICollection<Course> Courses { get; set; } = new List<Course>();
+        public User User { get; set; } = null!;
+
+        public InstructorProfile? Profile { get; set; }
+
+        public ICollection<Course> Courses { get; set; }
+            = new List<Course>();
+    }
 }

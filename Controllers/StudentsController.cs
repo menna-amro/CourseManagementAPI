@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
+using System.Security.Claims;
 
 namespace CourseManagementAPI.Controllers
 {
@@ -10,66 +11,72 @@ namespace CourseManagementAPI.Controllers
     [Authorize]
     public class StudentController : ControllerBase
     {
-        private readonly IStudentService _studentService;
+        private readonly IStudentService _service;
 
-        public StudentController(IStudentService studentService)
+        public StudentController(IStudentService service)
         {
-            _studentService = studentService;
+            _service = service;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+
+        // ================= CREATE MY PROFILE =================
+
+        [HttpPost("me")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> CreateMyProfile(CreateStudentDto dto)
         {
-            var students = await _studentService.GetAllAsync();
-            return Ok(students);
+            var userId = User.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            await _service.CreateAsync(dto, userId);
+
+            return Ok("Student profile created successfully");
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+
+        // ================= GET MY PROFILE =================
+
+        [HttpGet("me")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> GetMyProfile()
         {
-            var student = await _studentService.GetByIdAsync(id);
+            var userId = User.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            var student =
+                await _service.GetByUserIdAsync(userId);
 
             if (student == null)
-                return NotFound();
+                return NotFound("Student profile not found");
 
             return Ok(student);
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromBody] CreateStudentDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            await _studentService.CreateAsync(dto);
-            return Ok("Student created successfully");
+        // ================= GET ALL STUDENTS (ADMIN ONLY) =================
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAll()
+        {
+            var students = await _service.GetAllAsync();
+
+            return Ok(students);
         }
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            var existingStudent = await _studentService.GetByIdAsync(id);
-            if (existingStudent == null)
-                return NotFound();
-
-            await _studentService.UpdateAsync(id, dto);
-            return Ok("Student updated successfully");
-        }
+        // ================= DELETE STUDENT (ADMIN ONLY) =================
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existingStudent = await _studentService.GetByIdAsync(id);
-            if (existingStudent == null)
-                return NotFound();
+            await _service.DeleteAsync(id);
 
-            await _studentService.DeleteAsync(id);
             return Ok("Student deleted successfully");
         }
     }

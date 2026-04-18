@@ -6,7 +6,7 @@ namespace CourseManagementAPI.Services.Interfaces
     {
         Task<IEnumerable<InstructorDto>> GetAllAsync();
         Task<InstructorDto?> GetByIdAsync(int id);
-        Task CreateAsync(CreateInstructorDto dto);
+        Task CreateAsync(CreateInstructorDto dto, string userId);
         Task UpdateAsync(int id, UpdateInstructorDto dto);
         Task DeleteAsync(int id);
     }

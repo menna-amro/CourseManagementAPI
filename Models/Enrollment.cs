@@ -1,10 +1,13 @@
-public class Enrollment
+namespace CourseManagementAPI.Models
 {
-    public int StudentId { get; set; }
+    public class Enrollment
+    {
+        public int StudentId { get; set; }
 
-    public Student? Student { get; set; }
+        public Student Student { get; set; } = null!;
 
-    public int CourseId { get; set; }
+        public int CourseId { get; set; }
 
-    public Course? Course { get; set; }
+        public Course Course { get; set; } = null!;
+    }
 }

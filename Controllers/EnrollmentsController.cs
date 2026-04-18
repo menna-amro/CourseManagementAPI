@@ -10,45 +10,86 @@ namespace CourseManagementAPI.Controllers
     [Authorize]
     public class EnrollmentsController : ControllerBase
     {
-        private readonly IEnrollmentService _enrollmentService;
+        private readonly IEnrollmentService _service;
 
-        public EnrollmentsController(IEnrollmentService enrollmentService)
+        public EnrollmentsController(IEnrollmentService service)
         {
-            _enrollmentService = enrollmentService;
+            _service = service;
         }
+
+
+        // ================= STUDENT ENROLL HIMSELF =================
 
         [HttpPost]
-        [Authorize(Roles = "Student,Admin")]
-        public async Task<IActionResult> Enroll(CreateEnrollmentDto dto)
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> EnrollMyself(
+            CreateStudentEnrollmentDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var userId = User.FindFirst("UserId")?.Value;
 
-            await _enrollmentService.EnrollAsync(dto);
-            return Ok("Student enrolled successfully");
+            if (userId == null)
+                return Unauthorized();
+
+            await _service.EnrollStudentAsync(dto, userId);
+
+            return Ok("Enrollment successful");
         }
 
-        [HttpGet("student/{studentId}")]
-        [Authorize]
-        public async Task<IActionResult> GetStudentCourses(int studentId)
+
+        // ================= ADMIN ENROLL ANY STUDENT =================
+
+        [HttpPost("admin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EnrollStudentByAdmin(
+            CreateAdminEnrollmentDto dto)
         {
-            var result = await _enrollmentService.GetStudentCoursesAsync(studentId);
+            await _service.EnrollStudentByAdminAsync(dto);
+
+            return Ok("Student enrolled successfully by admin");
+        }
+
+
+        // ================= GET MY COURSES =================
+
+        [HttpGet("my-courses")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> GetMyCourses()
+        {
+            var userId = User.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+                return Unauthorized();
+
+            var result =
+                await _service.GetStudentCoursesAsync(userId);
+
             return Ok(result);
         }
+
+
+        // ================= GET COURSE STUDENTS =================
 
         [HttpGet("course/{courseId}")]
         [Authorize(Roles = "Admin,Instructor")]
         public async Task<IActionResult> GetCourseStudents(int courseId)
         {
-            var result = await _enrollmentService.GetCourseStudentsAsync(courseId);
+            var result =
+                await _service.GetCourseStudentsAsync(courseId);
+
             return Ok(result);
         }
 
+
+        // ================= DELETE ENROLLMENT =================
+
         [HttpDelete]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int studentId, int courseId)
+        public async Task<IActionResult> Delete(
+            int studentId,
+            int courseId)
         {
-            await _enrollmentService.DeleteAsync(studentId, courseId);
+            await _service.DeleteAsync(studentId, courseId);
+
             return Ok("Enrollment removed successfully");
         }
     }

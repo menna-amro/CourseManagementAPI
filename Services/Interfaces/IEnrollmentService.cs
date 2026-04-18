@@ -4,11 +4,18 @@ namespace CourseManagementAPI.Services.Interfaces
 {
     public interface IEnrollmentService
     {
-        Task EnrollAsync(CreateEnrollmentDto dto);
+        Task EnrollStudentAsync(
+            CreateStudentEnrollmentDto dto,
+            string userId);
 
-        Task<IEnumerable<EnrollmentDto>> GetStudentCoursesAsync(int studentId);
+        Task EnrollStudentByAdminAsync(
+            CreateAdminEnrollmentDto dto);
 
-        Task<IEnumerable<EnrollmentDto>> GetCourseStudentsAsync(int courseId);
+        Task<IEnumerable<EnrollmentDto>> GetStudentCoursesAsync(
+            string userId);
+
+        Task<IEnumerable<EnrollmentDto>> GetCourseStudentsAsync(
+            int courseId);
 
         Task DeleteAsync(int studentId, int courseId);
     }

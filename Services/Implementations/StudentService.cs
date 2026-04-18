@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI;
 using CourseManagementAPI.DTOs;
 using CourseManagementAPI.Services.Interfaces;
+using CourseManagementAPI.Models;
 
 namespace CourseManagementAPI.Services.Implementations
 {
@@ -17,14 +18,14 @@ namespace CourseManagementAPI.Services.Implementations
         public async Task<IEnumerable<StudentDto>> GetAllAsync()
         {
             return await _context.Students
-                .AsNoTracking()
-                .Select(s => new StudentDto
+                .AsNoTracking() 
+                .Select(s => new StudentDto    //mapping 
                 {
                     Id = s.Id,
                     Name = s.Name,
                     Email = s.Email
                 })
-                .ToListAsync();
+                .ToListAsync();   //returns a list of students
         }
 
         public async Task<StudentDto?> GetByIdAsync(int id)
@@ -38,18 +39,51 @@ namespace CourseManagementAPI.Services.Implementations
                     Name = s.Name,
                     Email = s.Email
                 })
+                .FirstOrDefaultAsync();  //returns a single student or null if not found
+        }
+
+        public async Task<StudentDto?> GetByUserIdAsync(string userId)
+        {
+            return await _context.Students
+                .Where(s => s.UserId == userId)
+                .Select(s => new StudentDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Email = s.Email
+                })
                 .FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(CreateStudentDto dto)
+        public async Task CreateAsync(CreateStudentDto dto, string userId)
         {
-            var student = new Student
-            {
-                Name = dto.Name,
-                Email = dto.Email
-            };
+            var studentExists =
+                await _context.Students
+                .AnyAsync(s => s.UserId == userId);
+
+            if (studentExists)
+                throw new Exception("Student profile already exists");
+
+
+            var instructorExists =
+                await _context.Instructors
+                .AnyAsync(i => i.UserId == userId);
+
+            if (instructorExists)
+                throw new Exception("Instructor cannot create student profile");
+
+
+            var student =
+                new Student
+                {
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    UserId = userId
+                };
+
 
             _context.Students.Add(student);
+
             await _context.SaveChangesAsync();
         }
 

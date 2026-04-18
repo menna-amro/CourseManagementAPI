@@ -1,82 +1,91 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using CourseManagementAPI.Models;
 
 namespace CourseManagementAPI
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
 
-        // DbSets
+        // DB TABLES
+
         public DbSet<Student> Students { get; set; }
+
         public DbSet<Course> Courses { get; set; }
+
         public DbSet<Instructor> Instructors { get; set; }
+
         public DbSet<InstructorProfile> InstructorProfiles { get; set; }
+
         public DbSet<Enrollment> Enrollments { get; set; }
 
-        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Composite Primary Key (Many-to-Many via Enrollment)
+
+            // UNIQUE STUDENT EMAIL
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.Email)
+                .IsUnique();
+
+
+            // UNIQUE INSTRUCTOR EMAIL
+            modelBuilder.Entity<InstructorProfile>()
+                .HasIndex(p => p.Email)
+                .IsUnique();
+
+
+            // UNIQUE COURSE TITLE PER INSTRUCTOR
+            modelBuilder.Entity<Course>()
+                .HasIndex(c => new { c.Title, c.InstructorId })
+                .IsUnique();
+
+
+            // COMPOSITE KEY (Enrollment)
             modelBuilder.Entity<Enrollment>()
                 .HasKey(e => new { e.StudentId, e.CourseId });
 
-            // One-to-One: Instructor ↔ InstructorProfile
+
+            // User ↔ Student (One-to-One)
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.User)
+                .WithOne(u => u.Student)
+                .HasForeignKey<Student>(s => s.UserId);
+
+
+            // User ↔ Instructor (One-to-One)
+            modelBuilder.Entity<Instructor>()
+                .HasOne(i => i.User)
+                .WithOne(u => u.Instructor)
+                .HasForeignKey<Instructor>(i => i.UserId);
+
+
+            // Instructor ↔ Profile (One-to-One)
             modelBuilder.Entity<Instructor>()
                 .HasOne(i => i.Profile)
                 .WithOne(p => p.Instructor)
                 .HasForeignKey<InstructorProfile>(p => p.InstructorId);
 
-            // One-to-Many: Instructor → Courses
-            modelBuilder.Entity<Instructor>()
-                .HasMany(i => i.Courses)
-                .WithOne(c => c.Instructor)
-                .HasForeignKey(c => c.InstructorId)
-                .OnDelete(DeleteBehavior.Cascade);
 
-            // Many-to-Many: Student ↔ Course (via Enrollment)
+            // Student ↔ Enrollment (One-to-Many)
             modelBuilder.Entity<Enrollment>()
                 .HasOne(e => e.Student)
                 .WithMany(s => s.Enrollments)
                 .HasForeignKey(e => e.StudentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
+
+            // Course ↔ Enrollment (One-to-Many)
             modelBuilder.Entity<Enrollment>()
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)
-                .HasForeignKey(e => e.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Seed Users (for testing)
-            modelBuilder.Entity<User>().HasData(
-                new User
-                {
-                    Id = 1,
-                    Username = "admin",
-                    Password = "123456",
-                    Role = "Admin"
-                },
-                new User
-                {
-                    Id = 2,
-                    Username = "instructor1",
-                    Password = "123456",
-                    Role = "Instructor"
-                },
-                new User
-                {
-                    Id = 3,
-                    Username = "student1",
-                    Password = "123456",
-                    Role = "Student"
-                }
-            );
+                .HasForeignKey(e => e.CourseId);
         }
     }
 }
